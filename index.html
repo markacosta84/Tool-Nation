@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tool Nation PDF Studio - Create professional PDFs with our easy-to-use editor. Format text, add links, and export to PDF instantly.">
+    <meta name="keywords" content="pdf creator, document editor, online pdf tool, text formatting, pdf export">
+    <meta name="author" content="Tool Nation">
+    <title>Tool Nation PDF Studio - Professional PDF Creation Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="brand">
+                <i class="fas fa-file-pdf brand-icon"></i>
+                <h1>Tool Nation PDF Studio</h1>
+            </div>
+            <p>Professional PDF Creation Tool</p>
+        </header>
+        
+        <div class="editor-container">
+            <div class="editor">
+                <div class="toolbar">
+                    <button class="format-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                    <button class="format-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                    <button class="format-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                    <button class="format-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                    <button class="format-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    <button class="format-btn" data-heading="1" title="Heading 1">H1</button>
+                    <button class="format-btn" data-heading="2" title="Heading 2">H2</button>
+                    <button class="format-btn" data-heading="3" title="Heading 3">H3</button>
+                    <button class="format-btn" data-align="left" title="Align Left"><i class="fas fa-align-left"></i></button>
+                    <button class="format-btn" data-align="center" title="Align Center"><i class="fas fa-align-center"></i></button>
+                    <button class="format-btn" data-align="right" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    <button class="format-btn" id="addLinkBtn" title="Add Link"><i class="fas fa-link"></i> Add Link</button>
+                </div>
+                
+                <div id="textEditor" contenteditable="true">
+                    <h1>Welcome to Tool Nation PDF Studio</h1>
+                    <p>Create professional PDF documents with our easy-to-use editor. Format your text, add hyperlinks, and export to PDF with a single click.</p>
+                    <p>All processing happens locally in your browser - your documents never leave your computer.</p>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-cog"></i>
+                        <span>PDF Settings</span>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pdfName" class="form-label">PDF Document Name</label>
+                        <input type="text" class="form-control" id="pdfName" placeholder="MyDocument" value="ToolNation_Document">
+                    </div>
+                    <button class="btn btn-primary w-100" id="downloadPdf">
+                        <i class="fas fa-download me-2"></i> Download PDF
+                    </button>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Document Statistics</span>
+                    </div>
+                    <div class="stats-container">
+                        <div class="stat-box">
+                            <div class="stat-value" id="wordCount">0</div>
+                            <div class="stat-label">Words</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="charCount">0</div>
+                            <div class="stat-label">Characters</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-file-upload"></i>
+                        <span>Import Content</span>
+                    </div>
+                    <div class="drop-zone" id="dropZone">
+                        <div class="drop-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h5>Drag & Drop</h5>
+                        <p class="small">Drop a .txt file here to import</p>
+                        <p class="small">or</p>
+                        <button class="btn btn-outline-primary btn-sm" id="fileSelectBtn">
+                            Select File
+                        </button>
+                        <input type="file" id="fileInput" accept=".txt">
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Application Info</span>
+                    </div>
+                    <p class="small">Tool Nation PDF Studio allows you to create professional PDF documents with preserved formatting and hyperlinks.</p>
+                    <p class="small">All processing happens locally in your browser - your documents never leave your computer.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="seo-content">
+            <h2>About Tool Nation PDF Studio</h2>
+            <p>Tool Nation PDF Studio is a powerful, browser-based document editor that allows users to create professional PDF files without any software installation. Our tool helps students, professionals, and businesses create formatted documents quickly and easily.</p>
+            
+            <h3>Key Features:</h3>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> Real-time text formatting with heading support</li>
+                <li><i class="fas fa-check-circle"></i> Hyperlink insertion for interactive documents</li>
+                <li><i class="fas fa-check-circle"></i> Text file import via drag and drop</li>
+                <li><i class="fas fa-check-circle"></i> Word and character count statistics</li>
+                <li><i class="fas fa-check-circle"></i> Professional PDF export with preserved formatting</li>
+                <li><i class="fas fa-check-circle"></i> Mobile-responsive design for on-the-go editing</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>© 2023 Tool Nation PDF Studio | Enterprise Edition</p>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Our JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
