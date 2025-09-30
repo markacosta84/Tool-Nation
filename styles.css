@@ -75,18 +75,22 @@ body {
     flex: 1;
     padding: 1.5rem;
     border-right: 1px solid #eaeaea;
+    display: flex;
+    flex-direction: column;
 }
 
 #textEditor {
     width: 100%;
     min-height: 60vh;
+    max-height: 60vh;
     padding: 1.5rem;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    resize: both;
+    resize: vertical;
     overflow: auto;
     font-size: 1rem;
     line-height: 1.6;
+    flex: 1;
 }
 
 #textEditor:focus {
@@ -99,12 +103,15 @@ body {
     width: 320px;
     padding: 1.5rem;
     background: #fafbff;
+    overflow-y: auto;
+    max-height: 80vh;
 }
 
 @media (max-width: 992px) {
     .controls {
         width: 100%;
         border-top: 1px solid #eaeaea;
+        max-height: none;
     }
 }
 
@@ -155,6 +162,17 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+.btn-outline {
+    color: var(--primary);
+    border-color: var(--primary);
+    background: transparent;
+}
+
+.btn-outline:hover {
+    color: white;
+    background-color: var(--primary);
+}
+
 .btn-outline-primary {
     color: var(--primary);
     border-color: var(--primary);
@@ -173,6 +191,14 @@ body {
 .btn-sm {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
+}
+
+.mt-1 {
+    margin-top: 0.25rem;
+}
+
+.me-2 {
+    margin-right: 0.5rem;
 }
 
 .stats-container {
@@ -207,6 +233,7 @@ body {
     text-align: center;
     transition: all 0.3s;
     cursor: pointer;
+    position: relative;
 }
 
 .drop-zone:hover, .drop-zone.dragover {
@@ -234,11 +261,18 @@ body {
     padding: 0.5rem 0.8rem;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .format-btn:hover {
     background: #e2e9ff;
     transform: translateY(-2px);
+}
+
+.format-btn i {
+    font-size: 0.9rem;
 }
 
 .form-label {
@@ -269,10 +303,6 @@ body {
 
 .mb-3 {
     margin-bottom: 1rem;
-}
-
-.me-2 {
-    margin-right: 0.5rem;
 }
 
 .small {
@@ -325,4 +355,41 @@ body {
 
 #fileInput {
     display: none;
+}
+
+/* Scrollbar styling */
+#textEditor::-webkit-scrollbar {
+    width: 8px;
+}
+
+#textEditor::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#textEditor::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#textEditor::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.controls::-webkit-scrollbar {
+    width: 6px;
+}
+
+.controls::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.controls::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.controls::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
