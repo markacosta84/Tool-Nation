@@ -1,9 +1,32 @@
+// Tool Nation PDF Studio - Enhanced JavaScript
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     updateCounters();
     setupDragAndDrop();
     setupEventListeners();
+    
+    // Store initial scroll position
+    storeScrollPosition();
 });
+
+// Store current scroll position
+let scrollPosition = { top: 0, left: 0 };
+
+function storeScrollPosition() {
+    const textEditor = document.getElementById('textEditor');
+    scrollPosition = {
+        top: textEditor.scrollTop,
+        left: textEditor.scrollLeft
+    };
+}
+
+// Restore scroll position
+function restoreScrollPosition() {
+    const textEditor = document.getElementById('textEditor');
+    textEditor.scrollTop = scrollPosition.top;
+    textEditor.scrollLeft = scrollPosition.left;
+}
 
 // Set up drag and drop functionality
 function setupDragAndDrop() {
@@ -77,8 +100,20 @@ function handleFiles(files) {
 function readTextFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
+        // Store current scroll position before updating content
+        storeScrollPosition();
+        
+        // Update editor content
         document.getElementById('textEditor').innerHTML = e.target.result;
+        
+        // Update counters
         updateCounters();
+        
+        // Try to auto-detect title
+        autoDetectTitle();
+        
+        // Restore scroll position after a brief delay
+        setTimeout(restoreScrollPosition, 10);
     };
     reader.readAsText(file);
 }
@@ -88,18 +123,41 @@ function setupEventListeners() {
     const textEditor = document.getElementById('textEditor');
     const downloadBtn = document.getElementById('downloadPdf');
     const addLinkBtn = document.getElementById('addLinkBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const autoTitleBtn = document.getElementById('autoTitleBtn');
     
     // Update counters when typing
-    textEditor.addEventListener('input', updateCounters);
+    textEditor.addEventListener('input', function() {
+        updateCounters();
+        
+        // Store scroll position during typing
+        storeScrollPosition();
+    });
     
     // Handle paste event
-    textEditor.addEventListener('paste', handlePaste);
+    textEditor.addEventListener('paste', function(e) {
+        // Store scroll position before paste
+        storeScrollPosition();
+        
+        // Allow default paste behavior then update counters
+        setTimeout(function() {
+            updateCounters();
+            autoDetectTitle();
+            restoreScrollPosition();
+        }, 10);
+    });
     
     // Download PDF button
     downloadBtn.addEventListener('click', generatePDF);
     
     // Add link button
     addLinkBtn.addEventListener('click', addLinkToText);
+    
+    // Clear button
+    clearBtn.addEventListener('click', clearEditor);
+    
+    // Auto-detect title button
+    autoTitleBtn.addEventListener('click', autoDetectTitle);
     
     // Format buttons
     const formatBtns = document.querySelectorAll('.format-btn');
@@ -128,12 +186,6 @@ function updateCounters() {
     
     document.getElementById('wordCount').textContent = wordCount;
     document.getElementById('charCount').textContent = charCount;
-}
-
-// Handle paste event to clean up formatting if needed
-function handlePaste(e) {
-    // Allow default paste behavior then update counters
-    setTimeout(updateCounters, 100);
 }
 
 // Text formatting functions
@@ -167,9 +219,123 @@ function addLinkToText() {
     document.getElementById('textEditor').focus();
 }
 
+// Clear editor content
+function clearEditor() {
+    if (confirm('Are you sure you want to clear all content?')) {
+        // Store scroll position before clearing
+        storeScrollPosition();
+        
+        document.getElementById('textEditor').innerHTML = '';
+        document.getElementById('pdfName').value = 'ToolNation Document';
+        updateCounters();
+        
+        // Restore scroll position
+        restoreScrollPosition();
+    }
+}
+
+// Auto-detect title from content - FIXED to get full title without unnecessary truncation
+function autoDetectTitle() {
+    const textEditor = document.getElementById('textEditor');
+    const pdfNameInput = document.getElementById('pdfName');
+    
+    // Try to find the first heading (h1, h2, h3)
+    const headings = textEditor.querySelectorAll('h1, h2, h3');
+    if (headings.length > 0) {
+        const firstHeading = headings[0].textContent.trim();
+        if (firstHeading) {
+            // Clean up the title - keep the full title, just remove problematic characters
+            let cleanTitle = firstHeading
+                .replace(/[^\w\s-.,!?]/g, '') // Remove only problematic special characters
+                .replace(/\s+/g, ' ')         // Replace multiple spaces with single space
+                .trim();                      // Remove leading/trailing spaces
+            
+            if (cleanTitle && cleanTitle.length > 0) {
+                pdfNameInput.value = cleanTitle;
+                console.log('Detected title from heading:', cleanTitle);
+                return;
+            }
+        }
+    }
+    
+    // If no heading found, try to use the first paragraph
+    const firstParagraph = textEditor.querySelector('p');
+    if (firstParagraph) {
+        const paragraphText = firstParagraph.textContent.trim();
+        if (paragraphText) {
+            // Take first sentence or reasonable chunk from paragraph
+            const firstSentence = paragraphText.split(/[.!?]/)[0].trim();
+            if (firstSentence && firstSentence.length > 10) {
+                let cleanTitle = firstSentence
+                    .replace(/[^\w\s-.,]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                
+                if (cleanTitle) {
+                    pdfNameInput.value = cleanTitle;
+                    console.log('Detected title from first paragraph:', cleanTitle);
+                    return;
+                }
+            }
+            
+            // If first sentence is too short, take a larger chunk but limit to reasonable length
+            const reasonableChunk = paragraphText.substring(0, 60).trim();
+            if (reasonableChunk && reasonableChunk.length > 15) {
+                let cleanTitle = reasonableChunk
+                    .replace(/[^\w\s-.,]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                
+                if (cleanTitle) {
+                    pdfNameInput.value = cleanTitle;
+                    console.log('Detected title from paragraph chunk:', cleanTitle);
+                    return;
+                }
+            }
+        }
+    }
+    
+    // If no suitable text found in structured elements, try the first line of the entire content
+    const allText = textEditor.innerText.trim();
+    if (allText) {
+        const firstLine = allText.split('\n')[0].trim();
+        if (firstLine && firstLine.length > 10) {
+            let cleanTitle = firstLine
+                .replace(/[^\w\s-.,]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            if (cleanTitle) {
+                pdfNameInput.value = cleanTitle;
+                console.log('Detected title from first line:', cleanTitle);
+                return;
+            }
+        }
+        
+        // If first line is too short, try to find a meaningful title in the first few lines
+        const lines = allText.split('\n').filter(line => line.trim().length > 10);
+        if (lines.length > 0) {
+            let cleanTitle = lines[0]
+                .replace(/[^\w\s-.,]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            if (cleanTitle) {
+                pdfNameInput.value = cleanTitle;
+                console.log('Detected title from meaningful line:', cleanTitle);
+                return;
+            }
+        }
+    }
+    
+    // Fallback to default name if no suitable title found
+    pdfNameInput.value = 'ToolNation Document';
+    console.log('No suitable title found, using default');
+}
+
 // Generate and download PDF
 function generatePDF() {
-    const pdfName = document.getElementById('pdfName').value || 'ToolNation_Document';
+    const pdfName = document.getElementById('pdfName').value || 'ToolNation Document';
     const element = document.getElementById('textEditor');
     
     // Options for html2pdf
