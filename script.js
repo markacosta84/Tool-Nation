@@ -153,7 +153,7 @@ function setupEventListeners() {
     // Add link button
     addLinkBtn.addEventListener('click', addLinkToText);
     
-    // Clear button
+    // Clear button - REMOVED CONFIRMATION POPUP
     clearBtn.addEventListener('click', clearEditor);
     
     // Auto-detect title button
@@ -219,19 +219,17 @@ function addLinkToText() {
     document.getElementById('textEditor').focus();
 }
 
-// Clear editor content
+// Clear editor content - REMOVED CONFIRMATION POPUP
 function clearEditor() {
-    if (confirm('Are you sure you want to clear all content?')) {
-        // Store scroll position before clearing
-        storeScrollPosition();
-        
-        document.getElementById('textEditor').innerHTML = '';
-        document.getElementById('pdfName').value = 'ToolNation Document';
-        updateCounters();
-        
-        // Restore scroll position
-        restoreScrollPosition();
-    }
+    // Store scroll position before clearing
+    storeScrollPosition();
+    
+    document.getElementById('textEditor').innerHTML = '';
+    document.getElementById('pdfName').value = 'ToolNation Document';
+    updateCounters();
+    
+    // Restore scroll position
+    restoreScrollPosition();
 }
 
 // Auto-detect title from content - FIXED to get full title without unnecessary truncation
@@ -333,20 +331,40 @@ function autoDetectTitle() {
     console.log('No suitable title found, using default');
 }
 
-// Generate and download PDF
+// Generate and download PDF - FIXED to capture all content
 function generatePDF() {
     const pdfName = document.getElementById('pdfName').value || 'ToolNation Document';
     const element = document.getElementById('textEditor');
+    
+    // Create a clone of the element to capture all content
+    const elementClone = element.cloneNode(true);
+    
+    // Apply styles to ensure all content is visible in PDF
+    elementClone.style.height = 'auto';
+    elementClone.style.overflow = 'visible';
+    elementClone.style.maxHeight = 'none';
+    
+    // Temporarily append the clone to the document to ensure proper rendering
+    elementClone.style.position = 'absolute';
+    elementClone.style.left = '-9999px';
+    document.body.appendChild(elementClone);
     
     // Options for html2pdf
     const opt = {
         margin: 10,
         filename: `${pdfName}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { 
+            scale: 2,
+            scrollY: 0, // Ensure we capture from the top
+            useCORS: true
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
     // Generate and download PDF
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(elementClone).save().then(() => {
+        // Clean up: remove the cloned element
+        document.body.removeChild(elementClone);
+    });
 }
