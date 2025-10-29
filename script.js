@@ -331,40 +331,48 @@ function autoDetectTitle() {
     console.log('No suitable title found, using default');
 }
 
-// Generate and download PDF - FIXED to capture all content
+// Generate and download PDF - PROPERLY FIXED to capture all content
 function generatePDF() {
     const pdfName = document.getElementById('pdfName').value || 'ToolNation Document';
     const element = document.getElementById('textEditor');
     
-    // Create a clone of the element to capture all content
-    const elementClone = element.cloneNode(true);
+    // Store original styles
+    const originalHeight = element.style.height;
+    const originalOverflow = element.style.overflow;
+    const originalMaxHeight = element.style.maxHeight;
     
-    // Apply styles to ensure all content is visible in PDF
-    elementClone.style.height = 'auto';
-    elementClone.style.overflow = 'visible';
-    elementClone.style.maxHeight = 'none';
+    // Temporarily remove height restrictions to capture all content
+    element.style.height = 'auto';
+    element.style.overflow = 'visible';
+    element.style.maxHeight = 'none';
     
-    // Temporarily append the clone to the document to ensure proper rendering
-    elementClone.style.position = 'absolute';
-    elementClone.style.left = '-9999px';
-    document.body.appendChild(elementClone);
-    
-    // Options for html2pdf
+    // Options for html2pdf - configured to capture entire content
     const opt = {
         margin: 10,
         filename: `${pdfName}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
             scale: 2,
-            scrollY: 0, // Ensure we capture from the top
-            useCORS: true
+            scrollY: 0, // Start from top
+            windowHeight: element.scrollHeight, // Use actual content height
+            useCORS: true,
+            logging: false
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
     // Generate and download PDF
-    html2pdf().set(opt).from(elementClone).save().then(() => {
-        // Clean up: remove the cloned element
-        document.body.removeChild(elementClone);
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Restore original styles
+        element.style.height = originalHeight;
+        element.style.overflow = originalOverflow;
+        element.style.maxHeight = originalMaxHeight;
+    }).catch(error => {
+        console.error('PDF generation error:', error);
+        // Restore original styles even if there's an error
+        element.style.height = originalHeight;
+        element.style.overflow = originalOverflow;
+        element.style.maxHeight = originalMaxHeight;
+        alert('Error generating PDF. Please try again.');
     });
 }
