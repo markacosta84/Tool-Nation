@@ -1,32 +1,11 @@
-// Tool Nation PDF Studio - Enhanced JavaScript
+// Tool Nation PDF Studio - Fixed JavaScript
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     updateCounters();
     setupDragAndDrop();
     setupEventListeners();
-    
-    // Store initial scroll position
-    storeScrollPosition();
 });
-
-// Store current scroll position
-let scrollPosition = { top: 0, left: 0 };
-
-function storeScrollPosition() {
-    const textEditor = document.getElementById('textEditor');
-    scrollPosition = {
-        top: textEditor.scrollTop,
-        left: textEditor.scrollLeft
-    };
-}
-
-// Restore scroll position
-function restoreScrollPosition() {
-    const textEditor = document.getElementById('textEditor');
-    textEditor.scrollTop = scrollPosition.top;
-    textEditor.scrollLeft = scrollPosition.left;
-}
 
 // Set up drag and drop functionality
 function setupDragAndDrop() {
@@ -100,9 +79,6 @@ function handleFiles(files) {
 function readTextFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-        // Store current scroll position before updating content
-        storeScrollPosition();
-        
         // Update editor content
         document.getElementById('textEditor').innerHTML = e.target.result;
         
@@ -111,9 +87,6 @@ function readTextFile(file) {
         
         // Try to auto-detect title
         autoDetectTitle();
-        
-        // Restore scroll position after a brief delay
-        setTimeout(restoreScrollPosition, 10);
     };
     reader.readAsText(file);
 }
@@ -129,21 +102,14 @@ function setupEventListeners() {
     // Update counters when typing
     textEditor.addEventListener('input', function() {
         updateCounters();
-        
-        // Store scroll position during typing
-        storeScrollPosition();
     });
     
     // Handle paste event
     textEditor.addEventListener('paste', function(e) {
-        // Store scroll position before paste
-        storeScrollPosition();
-        
         // Allow default paste behavior then update counters
         setTimeout(function() {
             updateCounters();
             autoDetectTitle();
-            restoreScrollPosition();
         }, 10);
     });
     
@@ -153,7 +119,7 @@ function setupEventListeners() {
     // Add link button
     addLinkBtn.addEventListener('click', addLinkToText);
     
-    // Clear button - REMOVED CONFIRMATION POPUP
+    // Clear button - works immediately without confirmation
     clearBtn.addEventListener('click', clearEditor);
     
     // Auto-detect title button
@@ -219,20 +185,14 @@ function addLinkToText() {
     document.getElementById('textEditor').focus();
 }
 
-// Clear editor content - REMOVED CONFIRMATION POPUP
+// Clear editor content - works immediately without confirmation
 function clearEditor() {
-    // Store scroll position before clearing
-    storeScrollPosition();
-    
     document.getElementById('textEditor').innerHTML = '';
     document.getElementById('pdfName').value = 'ToolNation Document';
     updateCounters();
-    
-    // Restore scroll position
-    restoreScrollPosition();
 }
 
-// Auto-detect title from content - FIXED to get full title without unnecessary truncation
+// Auto-detect title from content
 function autoDetectTitle() {
     const textEditor = document.getElementById('textEditor');
     const pdfNameInput = document.getElementById('pdfName');
@@ -242,137 +202,117 @@ function autoDetectTitle() {
     if (headings.length > 0) {
         const firstHeading = headings[0].textContent.trim();
         if (firstHeading) {
-            // Clean up the title - keep the full title, just remove problematic characters
             let cleanTitle = firstHeading
-                .replace(/[^\w\s-.,!?]/g, '') // Remove only problematic special characters
-                .replace(/\s+/g, ' ')         // Replace multiple spaces with single space
-                .trim();                      // Remove leading/trailing spaces
+                .replace(/[^\w\s-.,!?]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
             
             if (cleanTitle && cleanTitle.length > 0) {
                 pdfNameInput.value = cleanTitle;
-                console.log('Detected title from heading:', cleanTitle);
                 return;
             }
         }
     }
     
-    // If no heading found, try to use the first paragraph
-    const firstParagraph = textEditor.querySelector('p');
-    if (firstParagraph) {
-        const paragraphText = firstParagraph.textContent.trim();
-        if (paragraphText) {
-            // Take first sentence or reasonable chunk from paragraph
-            const firstSentence = paragraphText.split(/[.!?]/)[0].trim();
-            if (firstSentence && firstSentence.length > 10) {
-                let cleanTitle = firstSentence
-                    .replace(/[^\w\s-.,]/g, '')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-                
-                if (cleanTitle) {
-                    pdfNameInput.value = cleanTitle;
-                    console.log('Detected title from first paragraph:', cleanTitle);
-                    return;
-                }
-            }
-            
-            // If first sentence is too short, take a larger chunk but limit to reasonable length
-            const reasonableChunk = paragraphText.substring(0, 60).trim();
-            if (reasonableChunk && reasonableChunk.length > 15) {
-                let cleanTitle = reasonableChunk
-                    .replace(/[^\w\s-.,]/g, '')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-                
-                if (cleanTitle) {
-                    pdfNameInput.value = cleanTitle;
-                    console.log('Detected title from paragraph chunk:', cleanTitle);
-                    return;
-                }
-            }
-        }
-    }
-    
-    // If no suitable text found in structured elements, try the first line of the entire content
-    const allText = textEditor.innerText.trim();
-    if (allText) {
-        const firstLine = allText.split('\n')[0].trim();
-        if (firstLine && firstLine.length > 10) {
-            let cleanTitle = firstLine
-                .replace(/[^\w\s-.,]/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            if (cleanTitle) {
-                pdfNameInput.value = cleanTitle;
-                console.log('Detected title from first line:', cleanTitle);
-                return;
-            }
-        }
-        
-        // If first line is too short, try to find a meaningful title in the first few lines
-        const lines = allText.split('\n').filter(line => line.trim().length > 10);
-        if (lines.length > 0) {
-            let cleanTitle = lines[0]
-                .replace(/[^\w\s-.,]/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            if (cleanTitle) {
-                pdfNameInput.value = cleanTitle;
-                console.log('Detected title from meaningful line:', cleanTitle);
-                return;
-            }
-        }
-    }
-    
-    // Fallback to default name if no suitable title found
+    // If no heading found, use default name
     pdfNameInput.value = 'ToolNation Document';
-    console.log('No suitable title found, using default');
 }
 
-// Generate and download PDF - PROPERLY FIXED to capture all content
+// Generate and download PDF - PROPER FIXED VERSION
 function generatePDF() {
     const pdfName = document.getElementById('pdfName').value || 'ToolNation Document';
     const element = document.getElementById('textEditor');
     
-    // Store original styles
-    const originalHeight = element.style.height;
-    const originalOverflow = element.style.overflow;
-    const originalMaxHeight = element.style.maxHeight;
+    // Create a clean copy of the content for PDF generation
+    const pdfContent = document.createElement('div');
+    pdfContent.innerHTML = element.innerHTML;
     
-    // Temporarily remove height restrictions to capture all content
-    element.style.height = 'auto';
-    element.style.overflow = 'visible';
-    element.style.maxHeight = 'none';
+    // Apply PDF-friendly styles
+    pdfContent.style.padding = '20px';
+    pdfContent.style.fontFamily = 'Arial, sans-serif';
+    pdfContent.style.lineHeight = '1.6';
+    pdfContent.style.color = '#000';
     
-    // Options for html2pdf - configured to capture entire content
+    // Style headings for PDF
+    const headings = pdfContent.querySelectorAll('h1, h2, h3');
+    headings.forEach((heading, index) => {
+        if (heading.tagName === 'H1') {
+            heading.style.fontSize = '24px';
+            heading.style.fontWeight = 'bold';
+            heading.style.marginBottom = '15px';
+        } else if (heading.tagName === 'H2') {
+            heading.style.fontSize = '20px';
+            heading.style.fontWeight = 'bold';
+            heading.style.marginBottom = '12px';
+        } else if (heading.tagName === 'H3') {
+            heading.style.fontSize = '16px';
+            heading.style.fontWeight = 'bold';
+            heading.style.marginBottom = '10px';
+        }
+    });
+    
+    // Style paragraphs
+    const paragraphs = pdfContent.querySelectorAll('p');
+    paragraphs.forEach(p => {
+        p.style.marginBottom = '10px';
+        p.style.textAlign = 'left';
+    });
+    
+    // Style lists
+    const lists = pdfContent.querySelectorAll('ul, ol');
+    lists.forEach(list => {
+        list.style.marginBottom = '10px';
+        list.style.paddingLeft = '25px';
+    });
+    
+    // Style links
+    const links = pdfContent.querySelectorAll('a');
+    links.forEach(link => {
+        link.style.color = '#0066cc';
+        link.style.textDecoration = 'underline';
+    });
+    
+    // Temporarily add to DOM for proper rendering
+    pdfContent.style.position = 'fixed';
+    pdfContent.style.left = '0';
+    pdfContent.style.top = '0';
+    pdfContent.style.width = '100%';
+    pdfContent.style.background = 'white';
+    pdfContent.style.zIndex = '9999';
+    document.body.appendChild(pdfContent);
+    
+    // PDF options
     const opt = {
-        margin: 10,
+        margin: 15,
         filename: `${pdfName}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
             scale: 2,
-            scrollY: 0, // Start from top
-            windowHeight: element.scrollHeight, // Use actual content height
             useCORS: true,
-            logging: false
+            logging: true,
+            width: pdfContent.scrollWidth,
+            height: pdfContent.scrollHeight,
+            windowWidth: pdfContent.scrollWidth,
+            windowHeight: pdfContent.scrollHeight
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait',
+            compress: true
+        }
     };
     
-    // Generate and download PDF
-    html2pdf().set(opt).from(element).save().then(() => {
-        // Restore original styles
-        element.style.height = originalHeight;
-        element.style.overflow = originalOverflow;
-        element.style.maxHeight = originalMaxHeight;
+    // Generate PDF
+    html2pdf().set(opt).from(pdfContent).save().then(() => {
+        // Clean up - remove the temporary element
+        document.body.removeChild(pdfContent);
     }).catch(error => {
         console.error('PDF generation error:', error);
-        // Restore original styles even if there's an error
-        element.style.height = originalHeight;
-        element.style.overflow = originalOverflow;
-        element.style.maxHeight = originalMaxHeight;
+        // Clean up even if there's an error
+        if (document.body.contains(pdfContent)) {
+            document.body.removeChild(pdfContent);
+        }
         alert('Error generating PDF. Please try again.');
     });
 }
