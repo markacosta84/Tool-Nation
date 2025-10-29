@@ -1,4 +1,4 @@
-// Tool Nation PDF Studio - Fixed JavaScript
+// Tool Nation PDF Studio - Professional PDF Generation
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,23 +14,19 @@ function setupDragAndDrop() {
     const fileInput = document.getElementById('fileInput');
     const fileSelectBtn = document.getElementById('fileSelectBtn');
     
-    // Make the select file button trigger the file input
     fileSelectBtn.addEventListener('click', function() {
         fileInput.click();
     });
     
-    // Handle file selection
     fileInput.addEventListener('change', function() {
         handleFiles(this.files);
     });
     
-    // Add event listeners for drag and drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
         textEditor.addEventListener(eventName, preventDefaults, false);
     });
     
-    // Highlight drop zone when file is dragged over it
     ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, highlight, false);
         textEditor.addEventListener(eventName, highlight, false);
@@ -41,7 +37,6 @@ function setupDragAndDrop() {
         textEditor.addEventListener(eventName, unhighlight, false);
     });
     
-    // Handle dropped files
     dropZone.addEventListener('drop', handleDrop, false);
     textEditor.addEventListener('drop', handleDrop, false);
 }
@@ -79,13 +74,8 @@ function handleFiles(files) {
 function readTextFile(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-        // Update editor content
         document.getElementById('textEditor').innerHTML = e.target.result;
-        
-        // Update counters
         updateCounters();
-        
-        // Try to auto-detect title
         autoDetectTitle();
     };
     reader.readAsText(file);
@@ -99,33 +89,20 @@ function setupEventListeners() {
     const clearBtn = document.getElementById('clearBtn');
     const autoTitleBtn = document.getElementById('autoTitleBtn');
     
-    // Update counters when typing
-    textEditor.addEventListener('input', function() {
-        updateCounters();
-    });
+    textEditor.addEventListener('input', updateCounters);
     
-    // Handle paste event
     textEditor.addEventListener('paste', function(e) {
-        // Allow default paste behavior then update counters
         setTimeout(function() {
             updateCounters();
             autoDetectTitle();
         }, 10);
     });
     
-    // Download PDF button
     downloadBtn.addEventListener('click', generatePDF);
-    
-    // Add link button
     addLinkBtn.addEventListener('click', addLinkToText);
-    
-    // Clear button - works immediately without confirmation
     clearBtn.addEventListener('click', clearEditor);
-    
-    // Auto-detect title button
     autoTitleBtn.addEventListener('click', autoDetectTitle);
     
-    // Format buttons
     const formatBtns = document.querySelectorAll('.format-btn');
     formatBtns.forEach(btn => {
         if (btn.dataset.command) {
@@ -185,7 +162,7 @@ function addLinkToText() {
     document.getElementById('textEditor').focus();
 }
 
-// Clear editor content - works immediately without confirmation
+// Clear editor content
 function clearEditor() {
     document.getElementById('textEditor').innerHTML = '';
     document.getElementById('pdfName').value = 'ToolNation Document';
@@ -197,7 +174,6 @@ function autoDetectTitle() {
     const textEditor = document.getElementById('textEditor');
     const pdfNameInput = document.getElementById('pdfName');
     
-    // Try to find the first heading (h1, h2, h3)
     const headings = textEditor.querySelectorAll('h1, h2, h3');
     if (headings.length > 0) {
         const firstHeading = headings[0].textContent.trim();
@@ -214,105 +190,170 @@ function autoDetectTitle() {
         }
     }
     
-    // If no heading found, use default name
     pdfNameInput.value = 'ToolNation Document';
 }
 
-// Generate and download PDF - PROPER FIXED VERSION
+// Professional PDF Generation - Optimized for small file size
 function generatePDF() {
     const pdfName = document.getElementById('pdfName').value || 'ToolNation Document';
     const element = document.getElementById('textEditor');
     
-    // Create a clean copy of the content for PDF generation
-    const pdfContent = document.createElement('div');
-    pdfContent.innerHTML = element.innerHTML;
+    // Show loading state
+    const downloadBtn = document.getElementById('downloadPdf');
+    const originalText = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Generating PDF...';
+    downloadBtn.disabled = true;
     
-    // Apply PDF-friendly styles
-    pdfContent.style.padding = '20px';
-    pdfContent.style.fontFamily = 'Arial, sans-serif';
-    pdfContent.style.lineHeight = '1.6';
-    pdfContent.style.color = '#000';
-    
-    // Style headings for PDF
-    const headings = pdfContent.querySelectorAll('h1, h2, h3');
-    headings.forEach((heading, index) => {
-        if (heading.tagName === 'H1') {
-            heading.style.fontSize = '24px';
-            heading.style.fontWeight = 'bold';
-            heading.style.marginBottom = '15px';
-        } else if (heading.tagName === 'H2') {
-            heading.style.fontSize = '20px';
-            heading.style.fontWeight = 'bold';
-            heading.style.marginBottom = '12px';
-        } else if (heading.tagName === 'H3') {
-            heading.style.fontSize = '16px';
-            heading.style.fontWeight = 'bold';
-            heading.style.marginBottom = '10px';
-        }
-    });
-    
-    // Style paragraphs
-    const paragraphs = pdfContent.querySelectorAll('p');
-    paragraphs.forEach(p => {
-        p.style.marginBottom = '10px';
-        p.style.textAlign = 'left';
-    });
-    
-    // Style lists
-    const lists = pdfContent.querySelectorAll('ul, ol');
-    lists.forEach(list => {
-        list.style.marginBottom = '10px';
-        list.style.paddingLeft = '25px';
-    });
-    
-    // Style links
-    const links = pdfContent.querySelectorAll('a');
-    links.forEach(link => {
-        link.style.color = '#0066cc';
-        link.style.textDecoration = 'underline';
-    });
-    
-    // Temporarily add to DOM for proper rendering
-    pdfContent.style.position = 'fixed';
-    pdfContent.style.left = '0';
-    pdfContent.style.top = '0';
-    pdfContent.style.width = '100%';
-    pdfContent.style.background = 'white';
-    pdfContent.style.zIndex = '9999';
-    document.body.appendChild(pdfContent);
-    
-    // PDF options
-    const opt = {
-        margin: 15,
-        filename: `${pdfName}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2,
-            useCORS: true,
-            logging: true,
-            width: pdfContent.scrollWidth,
-            height: pdfContent.scrollHeight,
-            windowWidth: pdfContent.scrollWidth,
-            windowHeight: pdfContent.scrollHeight
-        },
-        jsPDF: { 
-            unit: 'mm', 
-            format: 'a4', 
-            orientation: 'portrait',
-            compress: true
-        }
-    };
-    
-    // Generate PDF
-    html2pdf().set(opt).from(pdfContent).save().then(() => {
-        // Clean up - remove the temporary element
-        document.body.removeChild(pdfContent);
-    }).catch(error => {
+    try {
+        // Create optimized PDF content
+        const pdfContent = createOptimizedPDFContent(element.innerHTML);
+        
+        // Optimized PDF options for small file size
+        const opt = {
+            margin: 10,
+            filename: `${pdfName}.pdf`,
+            image: { 
+                type: 'jpeg', 
+                quality: 0.7 // Reduced quality for smaller size
+            },
+            html2canvas: { 
+                scale: 1.5, // Reduced scale for smaller size
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait',
+                compress: true
+            }
+        };
+        
+        // Generate PDF
+        html2pdf().set(opt).from(pdfContent).save().then(() => {
+            console.log('PDF generated successfully');
+        }).catch(error => {
+            console.error('PDF generation error:', error);
+            alert('Error generating PDF. Please try again.');
+        }).finally(() => {
+            // Restore button state
+            downloadBtn.innerHTML = originalText;
+            downloadBtn.disabled = false;
+        });
+        
+    } catch (error) {
         console.error('PDF generation error:', error);
-        // Clean up even if there's an error
-        if (document.body.contains(pdfContent)) {
-            document.body.removeChild(pdfContent);
-        }
         alert('Error generating PDF. Please try again.');
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+    }
+}
+
+// Create optimized PDF content with professional styling
+function createOptimizedPDFContent(htmlContent) {
+    const container = document.createElement('div');
+    container.style.fontFamily = 'Arial, Helvetica, sans-serif';
+    container.style.lineHeight = '1.4';
+    container.style.color = '#333';
+    container.style.padding = '20px';
+    container.style.maxWidth = '800px';
+    container.style.margin = '0 auto';
+    container.style.backgroundColor = '#ffffff';
+    
+    // Process and clean the HTML content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    
+    // Apply professional styling to all elements
+    const elements = tempDiv.querySelectorAll('*');
+    elements.forEach(element => {
+        // Remove any inline styles that might cause issues
+        element.removeAttribute('style');
+        
+        // Apply consistent styling based on element type
+        switch(element.tagName.toLowerCase()) {
+            case 'h1':
+                element.style.fontSize = '24px';
+                element.style.fontWeight = 'bold';
+                element.style.margin = '20px 0 15px 0';
+                element.style.color = '#2c3e50';
+                element.style.borderBottom = '2px solid #3498db';
+                element.style.paddingBottom = '8px';
+                break;
+            case 'h2':
+                element.style.fontSize = '20px';
+                element.style.fontWeight = 'bold';
+                element.style.margin = '18px 0 12px 0';
+                element.style.color = '#2c3e50';
+                break;
+            case 'h3':
+                element.style.fontSize = '16px';
+                element.style.fontWeight = 'bold';
+                element.style.margin = '16px 0 10px 0';
+                element.style.color = '#2c3e50';
+                break;
+            case 'p':
+                element.style.margin = '12px 0';
+                element.style.fontSize = '14px';
+                element.style.textAlign = 'justify';
+                element.style.lineHeight = '1.6';
+                break;
+            case 'ul':
+            case 'ol':
+                element.style.margin = '12px 0';
+                element.style.paddingLeft = '25px';
+                break;
+            case 'li':
+                element.style.margin = '6px 0';
+                element.style.fontSize = '14px';
+                break;
+            case 'strong':
+            case 'b':
+                element.style.fontWeight = 'bold';
+                element.style.color = '#2c3e50';
+                break;
+            case 'em':
+            case 'i':
+                element.style.fontStyle = 'italic';
+                break;
+            case 'u':
+                element.style.textDecoration = 'underline';
+                break;
+            case 'a':
+                element.style.color = '#3498db';
+                element.style.textDecoration = 'underline';
+                break;
+            case 'hr':
+                element.style.border = 'none';
+                element.style.borderTop = '1px solid #e0e0e0';
+                element.style.margin = '20px 0';
+                break;
+        }
     });
+    
+    // Add professional header with title
+    const title = document.getElementById('pdfName').value || 'Document';
+    const header = document.createElement('div');
+    header.innerHTML = `
+        <div style="text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #3498db;">
+            <h1 style="font-size: 28px; font-weight: bold; color: #2c3e50; margin: 0 0 8px 0;">${title}</h1>
+            <p style="font-size: 12px; color: #7f8c8d; margin: 0;">Generated by Tool Nation PDF Studio</p>
+            <p style="font-size: 12px; color: #7f8c8d; margin: 5px 0 0 0;">${new Date().toLocaleDateString()}</p>
+        </div>
+    `;
+    
+    container.appendChild(header);
+    container.appendChild(tempDiv);
+    
+    // Add professional footer
+    const footer = document.createElement('div');
+    footer.innerHTML = `
+        <div style="text-align: center; margin-top: 40px; padding-top: 15px; border-top: 1px solid #e0e0e0; font-size: 10px; color: #95a5a6;">
+            <p>Page 1 of 1 • Created with Tool Nation PDF Studio</p>
+        </div>
+    `;
+    container.appendChild(footer);
+    
+    return container;
 }
