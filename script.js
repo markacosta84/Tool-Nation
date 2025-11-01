@@ -1,359 +1,298 @@
-// Tool Nation PDF Studio - Professional PDF Generation
+// DOM Elements
+const editor = document.getElementById('editor');
+const themeToggle = document.getElementById('themeToggle');
+const themeLabel = document.getElementById('themeLabel');
+const wordCount = document.getElementById('wordCount');
+const charCount = document.getElementById('charCount');
+const fileInput = document.getElementById('fileInput');
+const fileSelectBtn = document.getElementById('fileSelectBtn');
+const docTitle = document.getElementById('docTitle');
+const autoTitleBtn = document.getElementById('autoTitleBtn');
+const exportPdfBtn = document.getElementById('exportPdfBtn');
+const clearBtn = document.getElementById('clearBtn');
+const pageBreakBtn = document.getElementById('pageBreakBtn');
+
+// Formatting buttons
+const boldBtn = document.getElementById('boldBtn');
+const italicBtn = document.getElementById('italicBtn');
+const underlineBtn = document.getElementById('underlineBtn');
+const headingSelect = document.getElementById('headingSelect');
+const bulletListBtn = document.getElementById('bulletListBtn');
+const numberedListBtn = document.getElementById('numberedListBtn');
+const alignLeftBtn = document.getElementById('alignLeftBtn');
+const alignCenterBtn = document.getElementById('alignCenterBtn');
+const alignRightBtn = document.getElementById('alignRightBtn');
+const linkBtn = document.getElementById('linkBtn');
+
+// State variables
+let scrollPosition = 0;
+let isExporting = false;
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    updateCounters();
-    setupDragAndDrop();
+function init() {
+    loadFromLocalStorage();
     setupEventListeners();
-});
-
-// Set up drag and drop functionality
-function setupDragAndDrop() {
-    const dropZone = document.getElementById('dropZone');
-    const textEditor = document.getElementById('textEditor');
-    const fileInput = document.getElementById('fileInput');
-    const fileSelectBtn = document.getElementById('fileSelectBtn');
-    
-    fileSelectBtn.addEventListener('click', function() {
-        fileInput.click();
-    });
-    
-    fileInput.addEventListener('change', function() {
-        handleFiles(this.files);
-    });
-    
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, preventDefaults, false);
-        textEditor.addEventListener(eventName, preventDefaults, false);
-    });
-    
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropZone.addEventListener(eventName, highlight, false);
-        textEditor.addEventListener(eventName, highlight, false);
-    });
-    
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, unhighlight, false);
-        textEditor.addEventListener(eventName, unhighlight, false);
-    });
-    
-    dropZone.addEventListener('drop', handleDrop, false);
-    textEditor.addEventListener('drop', handleDrop, false);
-}
-
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
-
-function highlight(e) {
-    this.classList.add('dragover');
-}
-
-function unhighlight(e) {
-    this.classList.remove('dragover');
-}
-
-function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    handleFiles(files);
-}
-
-function handleFiles(files) {
-    if (files.length > 0) {
-        const file = files[0];
-        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
-            readTextFile(file);
-        } else {
-            alert('Please upload a .txt file only.');
-        }
-    }
-}
-
-function readTextFile(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('textEditor').innerHTML = e.target.result;
-        updateCounters();
-        autoDetectTitle();
-    };
-    reader.readAsText(file);
+    updateCounters();
+    applyThemeFromStorage();
 }
 
 // Set up all event listeners
 function setupEventListeners() {
-    const textEditor = document.getElementById('textEditor');
-    const downloadBtn = document.getElementById('downloadPdf');
-    const addLinkBtn = document.getElementById('addLinkBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const autoTitleBtn = document.getElementById('autoTitleBtn');
+    // Editor events
+    editor.addEventListener('input', updateCounters);
+    editor.addEventListener('input', autoSave);
     
-    textEditor.addEventListener('input', updateCounters);
+    // Theme toggle
+    themeToggle.addEventListener('change', toggleTheme);
     
-    textEditor.addEventListener('paste', function(e) {
-        setTimeout(function() {
-            updateCounters();
-            autoDetectTitle();
-        }, 10);
+    // File operations
+    fileSelectBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileImport);
+    
+    // Drag and drop for file import
+    editor.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        editor.classList.add('drag-over');
     });
     
-    downloadBtn.addEventListener('click', generatePDF);
-    addLinkBtn.addEventListener('click', addLinkToText);
-    clearBtn.addEventListener('click', clearEditor);
-    autoTitleBtn.addEventListener('click', autoDetectTitle);
+    editor.addEventListener('dragleave', () => {
+        editor.classList.remove('drag-over');
+    });
     
-    const formatBtns = document.querySelectorAll('.format-btn');
-    formatBtns.forEach(btn => {
-        if (btn.dataset.command) {
-            btn.addEventListener('click', function() {
-                formatText(this.dataset.command);
-            });
-        } else if (btn.dataset.heading) {
-            btn.addEventListener('click', function() {
-                setHeading(parseInt(this.dataset.heading));
-            });
-        } else if (btn.dataset.align) {
-            btn.addEventListener('click', function() {
-                justifyText(this.dataset.align);
-            });
+    editor.addEventListener('drop', (e) => {
+        e.preventDefault();
+        editor.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type === 'text/plain') {
+            importTextFile(files[0]);
         }
     });
+    
+    // Document operations
+    autoTitleBtn.addEventListener('click', autoDetectTitle);
+    exportPdfBtn.addEventListener('click', exportToPdf);
+    clearBtn.addEventListener('click', clearDocument);
+    pageBreakBtn.addEventListener('click', insertPageBreak);
+    
+    // Formatting buttons
+    boldBtn.addEventListener('click', () => formatText('bold'));
+    italicBtn.addEventListener('click', () => formatText('italic'));
+    underlineBtn.addEventListener('click', () => formatText('underline'));
+    headingSelect.addEventListener('change', () => formatHeading(headingSelect.value));
+    bulletListBtn.addEventListener('click', () => formatList('insertUnorderedList'));
+    numberedListBtn.addEventListener('click', () => formatList('insertOrderedList'));
+    alignLeftBtn.addEventListener('click', () => formatText('justifyLeft'));
+    alignCenterBtn.addEventListener('click', () => formatText('justifyCenter'));
+    alignRightBtn.addEventListener('click', () => formatText('justifyRight'));
+    linkBtn.addEventListener('click', insertLink);
 }
 
-// Update word and character counters
-function updateCounters() {
-    const text = document.getElementById('textEditor').innerText;
-    const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-    const charCount = text.length;
-    
-    document.getElementById('wordCount').textContent = wordCount;
-    document.getElementById('charCount').textContent = charCount;
+// Theme functionality
+function toggleTheme() {
+    const isDarkMode = themeToggle.checked;
+    document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    themeLabel.textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
+    localStorage.setItem('jawad-txt-pdf-theme', isDarkMode ? 'dark' : 'light');
+}
+
+function applyThemeFromStorage() {
+    const savedTheme = localStorage.getItem('jawad-txt-pdf-theme') || 'light';
+    const isDarkMode = savedTheme === 'dark';
+    themeToggle.checked = isDarkMode;
+    toggleTheme(); // Apply the theme
 }
 
 // Text formatting functions
 function formatText(command) {
     document.execCommand(command, false, null);
-    document.getElementById('textEditor').focus();
+    editor.focus();
 }
 
-function justifyText(alignment) {
-    document.execCommand('justify' + alignment, false, null);
-    document.getElementById('textEditor').focus();
+function formatHeading(headingType) {
+    if (headingType === 'p') {
+        document.execCommand('formatBlock', false, '<p>');
+    } else {
+        document.execCommand('formatBlock', false, `<${headingType}>`);
+    }
+    editor.focus();
 }
 
-function setHeading(level) {
-    document.execCommand('formatBlock', false, '<h' + level + '>');
-    document.getElementById('textEditor').focus();
+function formatList(command) {
+    document.execCommand(command, false, null);
+    editor.focus();
 }
 
-// Add link to selected text
-function addLinkToText() {
-    const selectedText = window.getSelection().toString();
-    if (!selectedText) {
-        alert('Please select some text to add a link.');
+function insertLink() {
+    const url = prompt('Enter the URL:');
+    if (url) {
+        document.execCommand('createLink', false, url);
+    }
+    editor.focus();
+}
+
+function insertPageBreak() {
+    const pageBreak = document.createElement('div');
+    pageBreak.className = 'page-break';
+    pageBreak.innerHTML = '--- Page Break ---';
+    
+    // Insert at cursor position
+    if (window.getSelection) {
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.insertNode(pageBreak);
+            
+            // Move cursor after the page break
+            const newRange = document.createRange();
+            newRange.setStartAfter(pageBreak);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+        }
+    }
+    
+    editor.focus();
+}
+
+// Document operations
+function autoDetectTitle() {
+    const content = editor.innerHTML;
+    
+    // Try to find an H1 tag first
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = content;
+    const h1 = tempDiv.querySelector('h1');
+    
+    if (h1 && h1.textContent.trim()) {
+        docTitle.value = h1.textContent.trim();
         return;
     }
     
-    const url = prompt('Enter URL for the link:', 'https://');
-    if (url !== null && url !== '') {
-        document.execCommand('createLink', false, url);
-    }
-    document.getElementById('textEditor').focus();
-}
-
-// Clear editor content
-function clearEditor() {
-    document.getElementById('textEditor').innerHTML = '';
-    document.getElementById('pdfName').value = 'ToolNation Document';
-    updateCounters();
-}
-
-// Auto-detect title from content
-function autoDetectTitle() {
-    const textEditor = document.getElementById('textEditor');
-    const pdfNameInput = document.getElementById('pdfName');
+    // If no H1, try to get the first line of text
+    const textContent = editor.textContent || editor.innerText;
+    const firstLine = textContent.split('\n')[0].trim();
     
-    const headings = textEditor.querySelectorAll('h1, h2, h3');
-    if (headings.length > 0) {
-        const firstHeading = headings[0].textContent.trim();
-        if (firstHeading) {
-            let cleanTitle = firstHeading
-                .replace(/[^\w\s-.,!?]/g, '')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            if (cleanTitle && cleanTitle.length > 0) {
-                pdfNameInput.value = cleanTitle;
-                return;
-            }
-        }
-    }
-    
-    pdfNameInput.value = 'ToolNation Document';
-}
-
-// Professional PDF Generation - Optimized for small file size
-function generatePDF() {
-    const pdfName = document.getElementById('pdfName').value || 'ToolNation Document';
-    const element = document.getElementById('textEditor');
-    
-    // Show loading state
-    const downloadBtn = document.getElementById('downloadPdf');
-    const originalText = downloadBtn.innerHTML;
-    downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Generating PDF...';
-    downloadBtn.disabled = true;
-    
-    try {
-        // Create optimized PDF content
-        const pdfContent = createOptimizedPDFContent(element.innerHTML);
-        
-        // Optimized PDF options for small file size
-        const opt = {
-            margin: 10,
-            filename: `${pdfName}.pdf`,
-            image: { 
-                type: 'jpeg', 
-                quality: 0.7 // Reduced quality for smaller size
-            },
-            html2canvas: { 
-                scale: 1.5, // Reduced scale for smaller size
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff'
-            },
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4', 
-                orientation: 'portrait',
-                compress: true
-            }
-        };
-        
-        // Generate PDF
-        html2pdf().set(opt).from(pdfContent).save().then(() => {
-            console.log('PDF generated successfully');
-        }).catch(error => {
-            console.error('PDF generation error:', error);
-            alert('Error generating PDF. Please try again.');
-        }).finally(() => {
-            // Restore button state
-            downloadBtn.innerHTML = originalText;
-            downloadBtn.disabled = false;
-        });
-        
-    } catch (error) {
-        console.error('PDF generation error:', error);
-        alert('Error generating PDF. Please try again.');
-        downloadBtn.innerHTML = originalText;
-        downloadBtn.disabled = false;
+    if (firstLine && firstLine.length > 0) {
+        docTitle.value = firstLine;
     }
 }
 
-// Create optimized PDF content with professional styling
-function createOptimizedPDFContent(htmlContent) {
-    const container = document.createElement('div');
-    container.style.fontFamily = 'Arial, Helvetica, sans-serif';
-    container.style.lineHeight = '1.4';
-    container.style.color = '#333';
-    container.style.padding = '20px';
-    container.style.maxWidth = '800px';
-    container.style.margin = '0 auto';
-    container.style.backgroundColor = '#ffffff';
+function clearDocument() {
+    if (confirm('Are you sure you want to clear the entire document?')) {
+        editor.innerHTML = '';
+        updateCounters();
+        autoSave();
+    }
+}
+
+// File import functionality
+function handleFileImport(e) {
+    const file = e.target.files[0];
+    if (file && file.type === 'text/plain') {
+        importTextFile(file);
+    }
+}
+
+function importTextFile(file) {
+    const reader = new FileReader();
     
-    // Process and clean the HTML content
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
+    reader.onload = function(e) {
+        const content = e.target.result;
+        editor.innerHTML = content.replace(/\n/g, '<br>');
+        updateCounters();
+        autoSave();
+        autoDetectTitle();
+    };
     
-    // Apply professional styling to all elements
-    const elements = tempDiv.querySelectorAll('*');
-    elements.forEach(element => {
-        // Remove any inline styles that might cause issues
-        element.removeAttribute('style');
-        
-        // Apply consistent styling based on element type
-        switch(element.tagName.toLowerCase()) {
-            case 'h1':
-                element.style.fontSize = '24px';
-                element.style.fontWeight = 'bold';
-                element.style.margin = '20px 0 15px 0';
-                element.style.color = '#2c3e50';
-                element.style.borderBottom = '2px solid #3498db';
-                element.style.paddingBottom = '8px';
-                break;
-            case 'h2':
-                element.style.fontSize = '20px';
-                element.style.fontWeight = 'bold';
-                element.style.margin = '18px 0 12px 0';
-                element.style.color = '#2c3e50';
-                break;
-            case 'h3':
-                element.style.fontSize = '16px';
-                element.style.fontWeight = 'bold';
-                element.style.margin = '16px 0 10px 0';
-                element.style.color = '#2c3e50';
-                break;
-            case 'p':
-                element.style.margin = '12px 0';
-                element.style.fontSize = '14px';
-                element.style.textAlign = 'justify';
-                element.style.lineHeight = '1.6';
-                break;
-            case 'ul':
-            case 'ol':
-                element.style.margin = '12px 0';
-                element.style.paddingLeft = '25px';
-                break;
-            case 'li':
-                element.style.margin = '6px 0';
-                element.style.fontSize = '14px';
-                break;
-            case 'strong':
-            case 'b':
-                element.style.fontWeight = 'bold';
-                element.style.color = '#2c3e50';
-                break;
-            case 'em':
-            case 'i':
-                element.style.fontStyle = 'italic';
-                break;
-            case 'u':
-                element.style.textDecoration = 'underline';
-                break;
-            case 'a':
-                element.style.color = '#3498db';
-                element.style.textDecoration = 'underline';
-                break;
-            case 'hr':
-                element.style.border = 'none';
-                element.style.borderTop = '1px solid #e0e0e0';
-                element.style.margin = '20px 0';
-                break;
-        }
+    reader.readAsText(file);
+}
+
+// PDF export functionality
+function exportToPdf() {
+    if (!editor.textContent.trim()) {
+        alert('Document is empty. Please add some content before exporting.');
+        return;
+    }
+    
+    isExporting = true;
+    
+    // Store current scroll position and styling
+    scrollPosition = editor.scrollTop;
+    const originalHeight = editor.style.height;
+    const originalOverflow = editor.style.overflow;
+    
+    // Temporarily expand the editor to show all content
+    editor.style.height = 'auto';
+    editor.style.overflow = 'visible';
+    
+    // Create a copy of the editor content for PDF generation
+    const contentCopy = document.createElement('div');
+    contentCopy.innerHTML = editor.innerHTML;
+    
+    // Add title if provided
+    const title = docTitle.value.trim();
+    if (title) {
+        const titleElement = document.createElement('h1');
+        titleElement.textContent = title;
+        titleElement.style.textAlign = 'center';
+        titleElement.style.marginBottom = '20px';
+        contentCopy.prepend(titleElement);
+    }
+    
+    // Add export info
+    const exportInfo = document.createElement('div');
+    exportInfo.style.textAlign = 'center';
+    exportInfo.style.marginTop = '30px';
+    exportInfo.style.fontSize = '12px';
+    exportInfo.style.color = '#666';
+    exportInfo.textContent = `Exported from Jawad's TXT to PDF on ${new Date().toLocaleDateString()}`;
+    contentCopy.appendChild(exportInfo);
+    
+    // PDF options
+    const options = {
+        margin: 10,
+        filename: `${title || 'document'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Generate PDF
+    html2pdf().from(contentCopy).set(options).save().then(() => {
+        // Restore original editor state
+        editor.style.height = originalHeight;
+        editor.style.overflow = originalOverflow;
+        editor.scrollTop = scrollPosition;
+        isExporting = false;
     });
-    
-    // Add professional header with title
-    const title = document.getElementById('pdfName').value || 'Document';
-    const header = document.createElement('div');
-    header.innerHTML = `
-        <div style="text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #3498db;">
-            <h1 style="font-size: 28px; font-weight: bold; color: #2c3e50; margin: 0 0 8px 0;">${title}</h1>
-            <p style="font-size: 12px; color: #7f8c8d; margin: 0;">Generated by Tool Nation PDF Studio</p>
-            <p style="font-size: 12px; color: #7f8c8d; margin: 5px 0 0 0;">${new Date().toLocaleDateString()}</p>
-        </div>
-    `;
-    
-    container.appendChild(header);
-    container.appendChild(tempDiv);
-    
-    // Add professional footer
-    const footer = document.createElement('div');
-    footer.innerHTML = `
-        <div style="text-align: center; margin-top: 40px; padding-top: 15px; border-top: 1px solid #e0e0e0; font-size: 10px; color: #95a5a6;">
-            <p>Page 1 of 1 • Created with Tool Nation PDF Studio</p>
-        </div>
-    `;
-    container.appendChild(footer);
-    
-    return container;
 }
+
+// Counter functionality
+function updateCounters() {
+    const text = editor.textContent || editor.innerText;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const characters = text.length;
+    
+    wordCount.textContent = `Words: ${words}`;
+    charCount.textContent = `Characters: ${characters}`;
+}
+
+// Local storage functionality
+function autoSave() {
+    const content = editor.innerHTML;
+    localStorage.setItem('jawad-txt-pdf-content', content);
+}
+
+function loadFromLocalStorage() {
+    const savedContent = localStorage.getItem('jawad-txt-pdf-content');
+    if (savedContent) {
+        editor.innerHTML = savedContent;
+    } else {
+        // Initialize with a placeholder
+        editor.innerHTML = '<p>Start typing your document here...</p>';
+    }
+}
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
