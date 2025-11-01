@@ -3,139 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tool Nation PDF Studio - Create professional PDFs with our easy-to-use editor. Format text, add links, and export to PDF instantly.">
-    <meta name="keywords" content="pdf creator, document editor, online pdf tool, text formatting, pdf export">
-    <meta name="author" content="Tool Nation">
-    <title>Tool Nation PDF Studio - Professional PDF Creation Tool</title>
+    <title>Jawad's TXT to PDF</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <header class="app-header">
-            <div class="brand">
-                <i class="fas fa-file-pdf brand-icon"></i>
-                <h1>Tool Nation PDF Studio</h1>
+    <div class="container">
+        <header>
+            <h1>Jawad's TXT to PDF</h1>
+            <div class="theme-toggle">
+                <label class="switch">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="slider round"></span>
+                </label>
+                <span id="themeLabel">Dark Mode</span>
             </div>
-            <p>Professional PDF Creation Tool</p>
         </header>
-        
-        <div class="editor-container">
-            <div class="editor">
+
+        <main class="editor-container">
+            <div class="workspace">
                 <div class="toolbar">
-                    <button class="format-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
-                    <button class="format-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
-                    <button class="format-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
-                    <button class="format-btn" data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-                    <button class="format-btn" data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                    <button class="format-btn" data-heading="1" title="Heading 1">H1</button>
-                    <button class="format-btn" data-heading="2" title="Heading 2">H2</button>
-                    <button class="format-btn" data-heading="3" title="Heading 3">H3</button>
-                    <button class="format-btn" data-align="left" title="Align Left"><i class="fas fa-align-left"></i></button>
-                    <button class="format-btn" data-align="center" title="Align Center"><i class="fas fa-align-center"></i></button>
-                    <button class="format-btn" data-align="right" title="Align Right"><i class="fas fa-align-right"></i></button>
-                    <button class="format-btn" id="addLinkBtn" title="Add Link"><i class="fas fa-link"></i> Add Link</button>
-                    <button class="format-btn" id="clearBtn" title="Clear All"><i class="fas fa-trash"></i> Clear</button>
+                    <div class="formatting-tools">
+                        <button type="button" id="boldBtn" title="Bold">B</button>
+                        <button type="button" id="italicBtn" title="Italic">I</button>
+                        <button type="button" id="underlineBtn" title="Underline">U</button>
+                        <select id="headingSelect" title="Headings">
+                            <option value="p">Paragraph</option>
+                            <option value="h1">Heading 1</option>
+                            <option value="h2">Heading 2</option>
+                            <option value="h3">Heading 3</option>
+                        </select>
+                        <button type="button" id="bulletListBtn" title="Bullet List">•</button>
+                        <button type="button" id="numberedListBtn" title="Numbered List">1.</button>
+                        <button type="button" id="alignLeftBtn" title="Align Left">⫷</button>
+                        <button type="button" id="alignCenterBtn" title="Align Center">⫸</button>
+                        <button type="button" id="alignRightBtn" title="Align Right">⫹</button>
+                        <button type="button" id="linkBtn" title="Insert Link">🔗</button>
+                    </div>
                 </div>
                 
-                <div id="textEditor" contenteditable="true">
-                    <h1>Welcome to Tool Nation PDF Studio</h1>
-                    <p>Create professional PDF documents with our easy-to-use editor. Format your text, add hyperlinks, and export to PDF with a single click.</p>
-                    <p>All processing happens locally in your browser - your documents never leave your computer.</p>
+                <div id="editor" contenteditable="true" class="editor-content"></div>
+                
+                <div class="document-info">
+                    <div class="counters">
+                        <span id="wordCount">Words: 0</span>
+                        <span id="charCount">Characters: 0</span>
+                    </div>
+                    <button type="button" id="clearBtn" class="btn-danger">Clear Document</button>
                 </div>
             </div>
             
-            <div class="controls">
-                <div class="control-section">
-                    <div class="section-title">
-                        <i class="fas fa-cog"></i>
-                        <span>PDF Settings</span>
-                    </div>
-                    <div class="mb-3">
-                        <label for="pdfName" class="form-label">PDF Document Name</label>
-                        <input type="text" class="form-control" id="pdfName" placeholder="MyDocument" value="ToolNation_Document">
-                        <button class="btn btn-outline btn-sm mt-1" id="autoTitleBtn">
-                            <i class="fas fa-magic"></i> Auto-detect Title
-                        </button>
-                    </div>
-                    <button class="btn btn-primary w-100" id="downloadPdf">
-                        <i class="fas fa-download me-2"></i> Download PDF
-                    </button>
-                </div>
-                
-                <div class="control-section">
-                    <div class="section-title">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Document Statistics</span>
-                    </div>
-                    <div class="stats-container">
-                        <div class="stat-box">
-                            <div class="stat-value" id="wordCount">0</div>
-                            <div class="stat-label">Words</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-value" id="charCount">0</div>
-                            <div class="stat-label">Characters</div>
+            <div class="sidebar">
+                <div class="controls">
+                    <div class="control-group">
+                        <h3>Import Text File</h3>
+                        <div class="file-import">
+                            <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                            <button type="button" id="fileSelectBtn" class="btn-primary">Select File</button>
+                            <p>or drag and drop .txt file here</p>
                         </div>
                     </div>
-                </div>
-                
-                <div class="control-section">
-                    <div class="section-title">
-                        <i class="fas fa-file-upload"></i>
-                        <span>Import Content</span>
+                    
+                    <div class="control-group">
+                        <h3>Document Title</h3>
+                        <input type="text" id="docTitle" placeholder="Auto-detected title">
+                        <button type="button" id="autoTitleBtn" class="btn-secondary">Auto-Detect Title</button>
                     </div>
-                    <div class="drop-zone" id="dropZone">
-                        <div class="drop-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <h5>Drag & Drop</h5>
-                        <p class="small">Drop a .txt file here to import</p>
-                        <p class="small">or</p>
-                        <button class="btn btn-outline-primary btn-sm" id="fileSelectBtn">
-                            Select File
-                        </button>
-                        <input type="file" id="fileInput" accept=".txt">
+                    
+                    <div class="control-group">
+                        <h3>Export Options</h3>
+                        <button type="button" id="exportPdfBtn" class="btn-primary">Export to PDF</button>
+                        <p class="note">Exports full document content, not just visible area</p>
                     </div>
-                </div>
-                
-                <div class="control-section">
-                    <div class="section-title">
-                        <i class="fas fa-info-circle"></i>
-                        <span>Application Info</span>
+                    
+                    <div class="control-group">
+                        <h3>Page Breaks</h3>
+                        <button type="button" id="pageBreakBtn" class="btn-secondary">Insert Page Break</button>
+                        <p class="note">Add manual page breaks for PDF export</p>
                     </div>
-                    <p class="small">Tool Nation PDF Studio allows you to create professional PDF documents with preserved formatting and hyperlinks.</p>
-                    <p class="small">All processing happens locally in your browser - your documents never leave your computer.</p>
                 </div>
             </div>
-        </div>
-        
-        <div class="seo-content">
-            <h2>About Tool Nation PDF Studio</h2>
-            <p>Tool Nation PDF Studio is a powerful, browser-based document editor that allows users to create professional PDF files without any software installation. Our tool helps students, professionals, and businesses create formatted documents quickly and easily.</p>
-            
-            <h3>Key Features:</h3>
-            <ul class="feature-list">
-                <li><i class="fas fa-check-circle"></i> Real-time text formatting with heading support</li>
-                <li><i class="fas fa-check-circle"></i> Hyperlink insertion for interactive documents</li>
-                <li><i class="fas fa-check-circle"></i> Text file import via drag and drop</li>
-                <li><i class="fas fa-check-circle"></i> Word and character count statistics</li>
-                <li><i class="fas fa-check-circle"></i> Professional PDF export with preserved formatting</li>
-                <li><i class="fas fa-check-circle"></i> Mobile-responsive design for on-the-go editing</li>
-                <li><i class="fas fa-check-circle"></i> Automatic title detection from content</li>
-                <li><i class="fas fa-check-circle"></i> One-click clear functionality</li>
-            </ul>
-        </div>
-        
-        <div class="footer">
-            <p>© 2023 Tool Nation PDF Studio | Enterprise Edition</p>
-        </div>
+        </main>
     </div>
 
-    <!-- External Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <!-- Our JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
