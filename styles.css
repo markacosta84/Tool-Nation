@@ -281,11 +281,49 @@ input[type="text"] {
 
 .page-break {
     page-break-after: always;
+    break-after: page;
     border-top: 2px dashed #ccc;
     margin: 20px 0;
     padding: 10px 0;
     text-align: center;
     color: #777;
+}
+
+/* Automatic page break for PDF export */
+.auto-page-break {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    page-break-before: always;
+    break-before: page;
+}
+
+/* Ensure page breaks work correctly in PDF */
+@media print {
+    .page-break {
+        page-break-after: always;
+        break-after: page;
+    }
+    
+    .auto-page-break {
+        page-break-before: always;
+        break-before: page;
+    }
+    
+    h1, h2, h3 {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+    
+    table, img {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* Hide UI elements during print/PDF export */
+    .toolbar, .sidebar, .document-info, header {
+        display: none !important;
+    }
 }
 
 /* Responsive Design */
